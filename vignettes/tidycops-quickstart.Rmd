@@ -1,0 +1,73 @@
+---
+title: "tidycops Quickstart"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{tidycops Quickstart}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+library(tidycops)
+```
+
+## Why tidycops?
+
+Public incident feeds vary by city and provider. `tidycops` gives you a single
+interface for:
+
+- discovering supported city adapters,
+- pulling city-native or cross-city standardized records, and
+- filtering with one consistent set of arguments.
+
+## Discover support
+
+```{r}
+list_supported_incident_cities()
+list_incident_sources()
+list_standard_incident_fields()
+```
+
+## Pull comparable records
+
+```{r eval = FALSE}
+sf_recent <- get_standardized_incidents(
+  city = "san_francisco",
+  last_n_days = 7,
+  offense_category = "larceny theft",
+  as_sf = TRUE,
+  limit = 500
+)
+```
+
+## Pull full city schema
+
+```{r eval = FALSE}
+cincy_full <- get_incidents(
+  city = "cincinnati",
+  view = "city_full",
+  last_n_days = 14,
+  limit = 1000
+)
+```
+
+## Pull untouched payload rows
+
+```{r eval = FALSE}
+houston_raw <- download_city_incidents_raw(
+  city = "houston",
+  last_n_days = 7,
+  limit = 2000
+)
+```
+
+## Next reads
+
+- `vignette("incident-views", package = "tidycops")`
+- `vignette("cross-city-comparisons", package = "tidycops")`
+- `vignette("source-coverage-and-caveats", package = "tidycops")`
+- `vignette("geometry-workflows", package = "tidycops")`

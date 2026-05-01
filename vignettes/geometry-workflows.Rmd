@@ -1,0 +1,64 @@
+---
+title: "Geometry Workflows"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Geometry Workflows}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+library(tidycops)
+```
+
+## Standardized geometry (recommended)
+
+For non-Dallas comparable analysis, use `as_sf = TRUE`. This builds point
+geometry from `std_longitude`/`std_latitude` in EPSG:4326.
+
+```{r eval = FALSE}
+sf_std <- get_standardized_incidents(
+  city = "seattle",
+  last_n_days = 7,
+  output = "comparable",
+  as_sf = TRUE,
+  limit = 5000
+)
+```
+
+You can also use the same behavior through `get_incidents()`:
+
+```{r eval = FALSE}
+sf_cmp <- get_incidents(
+  city = "seattle",
+  view = "comparable",
+  last_n_days = 7,
+  as_sf = TRUE,
+  limit = 5000
+)
+```
+
+## Dallas legacy geometry
+
+Dallas still uses legacy projected coordinates with `convert_geo = TRUE`
+(EPSG:2276).
+
+```{r eval = FALSE}
+dallas_sf <- get_incidents(
+  city = "dallas",
+  start_date = "2024-03-01",
+  end_date = "2024-03-31",
+  convert_geo = TRUE,
+  limit = 2000
+)
+```
+
+## Notes
+
+- `as_sf` is ignored for `view = "city_full"` and `view = "city_raw"`.
+- If coordinates are missing/invalid, `tidycops` drops those rows before
+  conversion and warns.

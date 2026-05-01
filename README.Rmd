@@ -11,174 +11,161 @@ knitr::opts_chunk$set(
   fig.path = "man/figures/README-",
   out.width = "100%"
 )
-library(opendpd)
+library(tidycops)
 ```
 
-# opendpd
+# tidycops
 
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of opendpd is to make Dallas Police open data easier to download, preserve, standardize, and query safely when the source portal is inconsistent.
+`tidycops` is an incident-focused R package for pulling public police data across cities with one interface.
+
+It supports two core modes:
+- Comparable cross-city output (`std_*` schema)
+- Full city-native output (all exposed source fields)
+
+## Currently Supported Cities
+
+As of April 30, 2026, incident adapters are available for:
+
+- Boston
+- Chicago
+- Cincinnati
+- Cleveland
+- Dallas
+- Denver
+- Detroit
+- Fort Lauderdale
+- Gainesville
+- Grand Rapids
+- Hartford
+- Houston
+- Indianapolis
+- Kansas City
+- Minneapolis
+- Naperville
+- New Orleans
+- New York City
+- Pittsburgh
+- Providence
+- Rochester
+- San Antonio
+- San Francisco
+- Seattle
+- Washington, DC
+
+Run `list_supported_incident_cities()` for the latest in-package list.
 
 ## Installation
 
-You can install the development version of opendpd like so:
+You can install the development version of tidycops like so:
 
 ``` r
 # install.packages("remotes") # Uncomment if user might not have remotes
-remotes::install_github("Steal-This-Code/opendpd")
+remotes::install_github("Steal-This-Code/tidycops")
 ```
 
-## Usage
-```{recommended libraries}
-# Optional: Load other packages needed for examples here if necessary
-# library(dplyr)
-# library(lubridate)
+## Incident Workflow
 
+```{r}
+library(dplyr)
+
+# Which cities are wired?
+list_supported_incident_cities()
+
+# Which fields are most comparable across cities?
+list_common_incident_fields(min_cities = 4)
 ```
 
-## Fetching Data
+### 1) Comparable Cross-City Output
 
-The package provides functions starting with `get_` to retrieve data from different datasets. By default, they now download raw data for the requested date range, clean and normalize it, and then apply dedicated filters locally. This is slower than portal-side filtering, but it is more robust when raw values are inconsistent. Use `filter_strategy = "portal"` if you want the faster, older behavior, and use `download_dpd_raw()` when you want the untouched source data.
+Use this when you want harmonized fields for city-to-city analysis.
 
-## Police Incidents
-
-This is the primary dataset for reported crime incidents.
-
-```{r example}
-# Get the first 50 incidents in the Central division for March 2024
-incidents_mar_central <- get_incidents(
-  start_date = "2024-03-01",
-  end_date = "2024-03-31",
-  division = "CENTRAL",
-  limit = 50
+```{r}
+sf_compare <- get_incidents(
+  city = "san_francisco",
+  view = "comparable",
+  start_date = "2026-04-01",
+  end_date = "2026-04-07",
+  neighborhood = "Mission",
+  as_sf = TRUE,
+  limit = 500
 )
-print(head(incidents_mar_central))
-
-# Get incidents as an sf object (requires sf package)
-# Note: Uses State Plane coordinates (EPSG:2276)
-# incidents_sf <- get_incidents(limit = 10, convert_geo = TRUE)
-# print(class(incidents_sf))
-
 ```
 
-## Police Arrests
+### 2) Full City Schema Output
 
-Retrieve data on arrests made by Dallas Police.
+Use this when you want all city-native fields plus adapter metadata.
 
-```{r example 2}
-# Get arrests for specific beats in March 2024
-arrests_mar_beats <- get_arrests(
-  start_date = "2024-03-01",
-  end_date = "2024-03-31",
-  beat = c(114, 121), # Note: Uses 'arlbeat' field from API
-  limit = 25
+```{r}
+cincy_full <- get_incidents(
+  city = "cincy",
+  view = "city_full",
+  start_date = "2026-04-01",
+  end_date = "2026-04-07",
+  limit = 1000
 )
-print(head(arrests_mar_beats))
-
 ```
 
-## Arrest Charges
+### 3) Raw Payload Output
 
-Retrieve details about charges associated with arrests.
+Use this when you want untouched source payload rows only.
 
-```{r example 3}
-# Get Felony charges during April 2024
-charges_apr_felony <- get_charges(
-  start_date = "2024-04-01",
-  end_date = "2024-04-30",
-  severity = "FELONY",
-  limit = 50
-)
-print(head(charges_apr_felony))
-
-```
-
-## Use of Force
-
-Retrieve Response to Resistance / Use of Force data. Requires specifying the year, as data is stored in separate yearly datasets (currently supports 2017-2020). Column names may vary by year.
-
-```{r example 4}
-# Get UoF incidents for 2020 where force type involved 'Physical Force'
-uof_2020_physical <- get_uof(
-  year = 2020,
-  force_type = "Physical Force",
-  limit = 25
-)
-print(head(uof_2020_physical))
-
-```
-
-## Exploring Filter Values
-
-Before filtering with the `get_` functions, you might want to see the available options for certain fields.
-
-```{r example 5}
-# See distinct divisions in the Incidents dataset
-incident_divisions <- list_distinct_values(field = "division", dataset = "incidents")
-print(incident_divisions)
-
-# See distinct severities in the Charges dataset
-charge_severities <- list_distinct_values(field = "severity", dataset = "charges")
-print(charge_severities)
-
-# See distinct penalty classes ('pclass') from Charges data
-charge_pclasses <- list_distinct_values(field = "pclass", dataset = "charges")
-print(charge_pclasses)
-
-# See distinct arrest districts ('arldistrict') from Arrests data
-arrest_districts <- list_distinct_values(field = "arldistrict", dataset = "arrests")
-print(arrest_districts)
-
-```
-
-## Cleaning Data
-
-The package includes functions to perform basic cleaning (text formatting, date parsing) and standardization for specific datasets. These are typically used after retrieving the data.
-
-## Basic Cleaning (Text and Dates)
-
-Functions like `clean_incidents_data()` and `clean_arrests_data()` apply standard text cleaning (lowercase, trim whitespace) to common fields and parse date/time columns into POSIXct objects (using `lubridate`, requires installation).
-
-```{r example 6}
-# Fetch untouched incident data from the portal
-raw_incidents <- download_dpd_raw(
-  dataset = "incidents",
-  limit = 20,
-  start_date = "2024-04-01"
+```{r}
+cincy_raw <- get_incidents(
+  city = "cincy",
+  view = "city_raw",
+  start_date = "2026-04-01",
+  end_date = "2026-04-07",
+  limit = 1000
 )
 
-# Apply cleaning
-# Needs stringr & lubridate: install.packages(c("stringr", "lubridate"))
-cleaned_incidents <- clean_incidents_data(raw_incidents)
-
-# Helper columns preserve the original fields and add normalized versions
-print(class(cleaned_incidents$date1_parsed))
-print(head(cleaned_incidents$division_standardized))
-
-# You can also clean arrest data
-# raw_arrests <- get_arrests(limit=20)
-# cleaned_arrests <- clean_arrests_data(raw_arrests)
+# Equivalent convenience helper:
+cincy_raw_2 <- download_city_incidents_raw(
+  city = "cincy",
+  start_date = "2026-04-01",
+  end_date = "2026-04-07",
+  limit = 1000
+)
 ```
 
-## Standardizing Categorical Fields
+### Date Shortcut
 
-Functions like `standardize_division()` and `standardize_district()` are still available when you want to overwrite a specific column with a factor after inspection, but most workflows can now rely on the helper columns created by `clean_*()` and the default `get_*()` pipeline.
+Use `last_n_days` when you want a trailing window without manual date math.
 
-```{r example 7}
-# Assuming 'cleaned_incidents' from the previous step
-standardized_incidents <- standardize_division(cleaned_incidents)
-standardized_incidents <- standardize_district(standardized_incidents) # Can chain them
-
-# See the standardized values and factor levels
-print(table(standardized_incidents$division, useNA = "ifany"))
-print(levels(standardized_incidents$district))
-
+```{r}
+recent_cincy <- get_incidents(
+  city = "cincinnati",
+  view = "comparable",
+  last_n_days = 14,
+  limit = 1000
+)
 ```
 
-## Data Sources
+## Source Freshness and Bounded Feeds
 
-Data is sourced from the [Dallas Open Data Portal](https://www.dallasopendata.com/). Specific datasets used include Police Incidents, Arrests, Arrest Charges, and Response to Resistance (Use of Force). Field names and data availability are subject to change based on the source portal. 
+Some adapters are rolling windows, capped historical feeds, or scope-limited
+(for example calls-for-service or Part I only). Check source metadata before
+analysis.
 
-All data are made available through the [Open Data Commons Attribution License](http://opendatacommons.org/licenses/by/1.0/)
+```{r}
+list_incident_sources() |>
+  dplyr::filter(source_status %in% c("historical_capped", "rolling_window") | scope_status != "all_incidents")
+```
+
+## Build Priorities: Incident Function Shortcuts
+
+Before expanding to arrests/UOF, these are the highest-value additions for
+incident workflows:
+
+1. `dedupe` controls
+   - Add optional dedupe modes (`none`, `incident_id`, `incident_number`) for
+     city feeds that publish multiple offense rows per incident.
+2. `fields = "core"` projection
+   - Add a quick column subset option for the most cross-city stable fields.
+3. Source diagnostics helper
+   - Add a helper to report expected coverage, null rates, and key field
+     completeness by city/date window.
+
+These keep the package incident-first while making pull/analyze loops faster.

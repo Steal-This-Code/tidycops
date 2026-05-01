@@ -1,0 +1,51 @@
+---
+title: "Source Coverage and Caveats"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Source Coverage and Caveats}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+library(tidycops)
+```
+
+## Why this matters
+
+City incident portals differ in time coverage and scope. `tidycops` tracks this
+in source metadata so you can evaluate comparability before analysis.
+
+## Source registry
+
+```{r}
+sources <- list_incident_sources()
+sources
+```
+
+## Key metadata fields
+
+- `active_from`, `active_to`: date window for a source slice
+- `source_status`, `source_note`: freshness and rolling/capped behavior
+- `scope_status`, `scope_note`: definition limits (for example Part I-only)
+
+## Find feeds with caveats
+
+```{r}
+subset <- dplyr::filter(
+  sources,
+  source_status %in% c("rolling_window", "historical_capped") |
+    scope_status != "all_incidents"
+)
+subset
+```
+
+## Practical workflow
+
+1. Query `list_incident_sources(city = ...)` before pulling data.
+2. Match analysis window to what the feed actually covers.
+3. Keep source notes with outputs when sharing results.

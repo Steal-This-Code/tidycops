@@ -1,10 +1,15 @@
 # R/get_incidents.R
 
-#' Fetch Dallas Police Incident Data
+#' Fetch Incident Data
 #'
-#' Retrieves incident data from the Dallas Open Data portal API
-#' (SODA endpoint `qv6i-rri7`). Optionally converts coordinates to a geographic
-#' object.
+#' Retrieves incident data for Dallas or any supported city adapter.
+#'
+#' For `city = "dallas"` this function preserves the original Dallas behavior
+#' and arguments. For non-Dallas cities, `view` controls whether results are:
+#' full city schema (`"city_full"`), standardized comparison schema
+#' (`"comparable"`), or both (`"both"`).
+#'
+#' Optionally converts Dallas projected coordinates to an `sf` object.
 #'
 #' @description
 #' `get_incidents()` now defaults to a safer pipeline:
@@ -24,6 +29,9 @@
 #'   `Date` object specifying the minimum incident date (inclusive).
 #' @param end_date Optional. A character string in `'YYYY-MM-DD'` format or a
 #'   `Date` object specifying the maximum incident date (inclusive).
+#' @param last_n_days Optional. Positive integer shortcut that sets
+#'   `start_date`/`end_date` to the last `n` calendar days ending today.
+#'   Cannot be combined with `start_date` or `end_date`.
 #' @param nibrs_group Optional. A character vector of NIBRS Group codes to
 #'   filter incidents.
 #' @param nibrs_code Optional. A character vector of specific NIBRS offense
@@ -36,10 +44,34 @@
 #' @param sector Optional. A character or numeric vector of police sectors.
 #' @param district Optional. A character vector of council district names or
 #'   numbers.
+#' @param neighborhood Optional. Neighborhood filter. For Dallas this is only
+#'   applied when `standardize = TRUE`; for other supported cities it maps to
+#'   the standardized neighborhood field.
+#' @param offense Optional. Offense description filter applied to the
+#'   standardized incident schema.
+#' @param offense_category Optional. Offense category filter applied to the
+#'   standardized incident schema.
+#' @param disposition Optional. Disposition/closure filter applied to the
+#'   standardized incident schema.
 #' @param convert_geo Logical. If `TRUE`, attempt to convert the data frame to
 #'   an `sf` object using `x_coordinate` and `y_cordinate`.
+#' @param as_sf Logical. If `TRUE`, attempt to convert non-Dallas standardized
+#'   output (`view = "both"` or `"comparable"`) into an `sf` point object
+#'   using `std_longitude`/`std_latitude` (EPSG:4326). Ignored for Dallas,
+#'   where `convert_geo` controls legacy projected conversion.
 #' @param clean Logical. If `TRUE` (default), return cleaned data with helper
 #'   columns such as `division_standardized` and `date1_parsed`.
+#' @param standardize Logical or `NULL`. Dallas-only behavior. When `TRUE`,
+#'   append common `std_*` columns to Dallas records. Defaults to `FALSE` for
+#'   Dallas and `TRUE` for other supported cities, though non-Dallas output is
+#'   now controlled primarily by `view`.
+#' @param city City key. Defaults to `"dallas"`. Non-Dallas cities use the
+#'   standardized multi-city adapter.
+#' @param view Output mode for non-Dallas city adapters:
+#'   `"both"` (default) returns city raw columns plus standardized `std_*`
+#'   columns; `"comparable"` returns only `std_*` columns; `"city_full"`
+#'   returns the city's full exposed schema plus lightweight adapter metadata;
+#'   `"city_raw"` returns untouched source payload rows with no added columns.
 #' @param filter_strategy Either `"cleaned"` (default) to filter after
 #'   normalization or `"portal"` to push dedicated filters into the Socrata
 #'   query.
@@ -52,10 +84,13 @@
 #'   such as `$order = "date1 DESC"`.
 #'
 #' @return A tibble by default. If `convert_geo = TRUE` and coordinates are
-#'   valid, returns an `sf` object with CRS EPSG:2276.
+#'   valid, returns an `sf` object with CRS EPSG:2276. For non-Dallas
+#'   standardized output, `as_sf = TRUE` returns EPSG:4326 points when
+#'   `std_longitude`/`std_latitude` are available.
 #' @export
 get_incidents <- function(start_date = NULL,
                           end_date = NULL,
+                          last_n_days = NULL,
                           nibrs_group = NULL,
                           nibrs_code = NULL,
                           nibrs_crime_against = NULL,
@@ -64,18 +99,140 @@ get_incidents <- function(start_date = NULL,
                           division = NULL,
                           sector = NULL,
                           district = NULL,
+                          neighborhood = NULL,
+                          offense = NULL,
+                          offense_category = NULL,
+                          disposition = NULL,
                           convert_geo = FALSE,
+                          as_sf = FALSE,
                           clean = TRUE,
+                          standardize = NULL,
+                          city = "dallas",
+                          view = c("both", "comparable", "city_full", "city_raw"),
                           filter_strategy = c("cleaned", "portal"),
                           limit = 1000,
                           select = NULL,
                           where = NULL,
                           ...) {
+  city <- normalize_incident_city_key(city)
+  view <- match.arg(view)
+  date_window <- resolve_incident_date_window(
+    start_date = start_date,
+    end_date = end_date,
+    last_n_days = last_n_days
+  )
+  start_date <- date_window$start_date
+  end_date <- date_window$end_date
+
+  if (is.null(standardize)) {
+    standardize <- !identical(city, "dallas")
+  }
+  if (!is.logical(as_sf) || length(as_sf) != 1) {
+    stop("`as_sf` must be TRUE or FALSE.", call. = FALSE)
+  }
+  if (!is.logical(standardize) || length(standardize) != 1) {
+    stop("`standardize` must be TRUE, FALSE, or NULL.", call. = FALSE)
+  }
+
+  if (!identical(city, "dallas")) {
+    unsupported <- c(
+      nibrs_group = !is.null(nibrs_group),
+      nibrs_code = !is.null(nibrs_code),
+      nibrs_crime_against = !is.null(nibrs_crime_against),
+      sector = !is.null(sector),
+      convert_geo = isTRUE(convert_geo)
+    )
+
+    if (any(unsupported)) {
+      rlang::warn(
+        paste(
+          "Ignoring Dallas-specific arguments for city adapter",
+          shQuote(city), ":",
+          paste(names(unsupported)[unsupported], collapse = ", ")
+        )
+      )
+    }
+
+    if (identical(view, "city_full") || identical(view, "city_raw")) {
+      ignored_filters <- c(
+        offense = !is.null(offense),
+        offense_category = !is.null(offense_category),
+        neighborhood = !is.null(neighborhood),
+        zip_code = !is.null(zip_code),
+        beat = !is.null(beat),
+        district = !is.null(district),
+        division = !is.null(division),
+        disposition = !is.null(disposition)
+      )
+
+      if (any(ignored_filters)) {
+        rlang::warn(
+          paste(
+            "Ignoring standardized filters for `view = ", shQuote(view), "`:",
+            paste(names(ignored_filters)[ignored_filters], collapse = ", ")
+          )
+        )
+      }
+      if (isTRUE(as_sf)) {
+        rlang::warn("Ignoring `as_sf` for `view = \"city_full\"` and `view = \"city_raw\"`.")
+      }
+
+      if (identical(view, "city_raw")) {
+        return(get_city_incidents_raw(
+          city = city,
+          start_date = start_date,
+          end_date = end_date,
+          limit = limit,
+          select = select,
+          where = where,
+          ...
+        ))
+      }
+
+      return(get_city_incidents(
+        city = city,
+        start_date = start_date,
+        end_date = end_date,
+        limit = limit,
+        select = select,
+        where = where,
+        clean = clean,
+        ...
+      ))
+    }
+
+    return(get_standardized_incidents(
+      city = city,
+      start_date = start_date,
+      end_date = end_date,
+      offense = offense,
+      offense_category = offense_category,
+      neighborhood = neighborhood,
+      zip_code = zip_code,
+      beat = beat,
+      district = district,
+      division = division,
+      disposition = disposition,
+      limit = limit,
+      select = select,
+      where = where,
+      output = if (identical(view, "comparable")) "comparable" else "both",
+      as_sf = as_sf,
+      ...
+    ))
+  }
+
   if (!is.logical(convert_geo) || length(convert_geo) != 1) {
     stop("`convert_geo` must be TRUE or FALSE.", call. = FALSE)
   }
+  if (isTRUE(as_sf)) {
+    rlang::warn("Ignoring `as_sf` for Dallas. Use `convert_geo = TRUE` for Dallas projected geometry.")
+  }
   if (!is.logical(clean) || length(clean) != 1) {
     stop("`clean` must be TRUE or FALSE.", call. = FALSE)
+  }
+  if (!identical(view, "both")) {
+    rlang::warn("`view` is only used for non-Dallas adapters; using Dallas default behavior.")
   }
 
   validate_limit(limit)
@@ -191,6 +348,26 @@ get_incidents <- function(start_date = NULL,
       division = division,
       sector = sector,
       district = district
+    )
+  }
+
+  if (standardize && nrow(final_data) > 0) {
+    final_data <- standardize_incident_records(
+      data = final_data,
+      city = "dallas",
+      source = get_incident_city_spec("dallas")$sources[[1]]
+    )
+
+    final_data <- filter_standardized_incidents(
+      final_data,
+      offense = offense,
+      offense_category = offense_category,
+      neighborhood = neighborhood,
+      zip_code = zip_code,
+      beat = beat,
+      district = district,
+      division = division,
+      disposition = disposition
     )
   }
 

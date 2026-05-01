@@ -50,5 +50,5 @@ source values.
 }
 \details{
 Performs basic cleaning on text fields and converts date/time columns for
-data retrieved using [get_incidents()] or [download_dpd_raw()].
+data retrieved using [get_incidents()] or [download_city_incidents_raw()].
 }

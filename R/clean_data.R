@@ -3,7 +3,7 @@
 #' Clean Dallas Police Incidents Data
 #'
 #' Performs basic cleaning on text fields and converts date/time columns for
-#' data retrieved using [get_incidents()] or [download_dpd_raw()].
+#' data retrieved using [get_incidents()] or [download_city_incidents_raw()].
 #'
 #' @description
 #' By default, this function preserves the original portal fields and adds

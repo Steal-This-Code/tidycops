@@ -1,0 +1,85 @@
+---
+title: "Incident Views and Retrieval Modes"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Incident Views and Retrieval Modes}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+library(tidycops)
+```
+
+## Overview
+
+`get_incidents()` supports four output views for non-Dallas city adapters.
+
+- `view = "both"`: city-native fields plus standardized `std_*` columns
+- `view = "comparable"`: only standardized `std_*` columns
+- `view = "city_full"`: full city schema plus adapter metadata columns
+- `view = "city_raw"`: untouched source payload rows
+
+## Comparable view
+
+```{r eval = FALSE}
+cmp <- get_incidents(
+  city = "cincinnati",
+  view = "comparable",
+  last_n_days = 7,
+  offense = "theft",
+  limit = 500
+)
+```
+
+## City full view
+
+```{r eval = FALSE}
+full <- get_incidents(
+  city = "houston",
+  view = "city_full",
+  last_n_days = 7,
+  limit = 1000
+)
+```
+
+## Raw payload view
+
+```{r eval = FALSE}
+raw <- get_incidents(
+  city = "houston",
+  view = "city_raw",
+  last_n_days = 7,
+  limit = 1000
+)
+```
+
+## Raw convenience helper
+
+`download_city_incidents_raw()` is a shortcut for untouched incident payloads.
+
+```{r eval = FALSE}
+raw2 <- download_city_incidents_raw(
+  city = "houston",
+  last_n_days = 7,
+  limit = 1000
+)
+```
+
+## Date window options
+
+Use either explicit dates or a trailing window:
+
+```{r eval = FALSE}
+# Explicit range
+get_incidents(city = "san_francisco", view = "comparable",
+              start_date = "2026-04-01", end_date = "2026-04-07")
+
+# Trailing range
+get_incidents(city = "san_francisco", view = "comparable",
+              last_n_days = 7)
+```

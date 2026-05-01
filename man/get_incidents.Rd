@@ -2,11 +2,12 @@
 % Please edit documentation in R/get_incidents.R
 \name{get_incidents}
 \alias{get_incidents}
-\title{Fetch Dallas Police Incident Data}
+\title{Fetch Incident Data}
 \usage{
 get_incidents(
   start_date = NULL,
   end_date = NULL,
+  last_n_days = NULL,
   nibrs_group = NULL,
   nibrs_code = NULL,
   nibrs_crime_against = NULL,
@@ -15,8 +16,16 @@ get_incidents(
   division = NULL,
   sector = NULL,
   district = NULL,
+  neighborhood = NULL,
+  offense = NULL,
+  offense_category = NULL,
+  disposition = NULL,
   convert_geo = FALSE,
+  as_sf = FALSE,
   clean = TRUE,
+  standardize = NULL,
+  city = "dallas",
+  view = c("both", "comparable", "city_full", "city_raw"),
   filter_strategy = c("cleaned", "portal"),
   limit = 1000,
   select = NULL,
@@ -30,6 +39,10 @@ get_incidents(
 
 \item{end_date}{Optional. A character string in `'YYYY-MM-DD'` format or a
 `Date` object specifying the maximum incident date (inclusive).}
+
+\item{last_n_days}{Optional. Positive integer shortcut that sets
+`start_date`/`end_date` to the last `n` calendar days ending today.
+Cannot be combined with `start_date` or `end_date`.}
 
 \item{nibrs_group}{Optional. A character vector of NIBRS Group codes to
 filter incidents.}
@@ -51,11 +64,43 @@ Crime Against category.}
 \item{district}{Optional. A character vector of council district names or
 numbers.}
 
+\item{neighborhood}{Optional. Neighborhood filter. For Dallas this is only
+applied when `standardize = TRUE`; for other supported cities it maps to
+the standardized neighborhood field.}
+
+\item{offense}{Optional. Offense description filter applied to the
+standardized incident schema.}
+
+\item{offense_category}{Optional. Offense category filter applied to the
+standardized incident schema.}
+
+\item{disposition}{Optional. Disposition/closure filter applied to the
+standardized incident schema.}
+
 \item{convert_geo}{Logical. If `TRUE`, attempt to convert the data frame to
 an `sf` object using `x_coordinate` and `y_cordinate`.}
 
+\item{as_sf}{Logical. If `TRUE`, attempt to convert non-Dallas standardized
+output (`view = "both"` or `"comparable"`) into an `sf` point object
+using `std_longitude`/`std_latitude` (EPSG:4326). Ignored for Dallas,
+where `convert_geo` controls legacy projected conversion.}
+
 \item{clean}{Logical. If `TRUE` (default), return cleaned data with helper
 columns such as `division_standardized` and `date1_parsed`.}
+
+\item{standardize}{Logical or `NULL`. Dallas-only behavior. When `TRUE`,
+append common `std_*` columns to Dallas records. Defaults to `FALSE` for
+Dallas and `TRUE` for other supported cities, though non-Dallas output is
+now controlled primarily by `view`.}
+
+\item{city}{City key. Defaults to `"dallas"`. Non-Dallas cities use the
+standardized multi-city adapter.}
+
+\item{view}{Output mode for non-Dallas city adapters:
+`"both"` (default) returns city raw columns plus standardized `std_*`
+columns; `"comparable"` returns only `std_*` columns; `"city_full"`
+returns the city's full exposed schema plus lightweight adapter metadata;
+`"city_raw"` returns untouched source payload rows with no added columns.}
 
 \item{filter_strategy}{Either `"cleaned"` (default) to filter after
 normalization or `"portal"` to push dedicated filters into the Socrata
@@ -74,7 +119,9 @@ such as `$order = "date1 DESC"`.}
 }
 \value{
 A tibble by default. If `convert_geo = TRUE` and coordinates are
-  valid, returns an `sf` object with CRS EPSG:2276.
+  valid, returns an `sf` object with CRS EPSG:2276. For non-Dallas
+  standardized output, `as_sf = TRUE` returns EPSG:4326 points when
+  `std_longitude`/`std_latitude` are available.
 }
 \description{
 `get_incidents()` now defaults to a safer pipeline:
@@ -91,7 +138,12 @@ Set `filter_strategy = "portal"` to use the previous portal-side filtering
 behavior when speed matters more than normalization.
 }
 \details{
-Retrieves incident data from the Dallas Open Data portal API
-(SODA endpoint `qv6i-rri7`). Optionally converts coordinates to a geographic
-object.
+Retrieves incident data for Dallas or any supported city adapter.
+
+For `city = "dallas"` this function preserves the original Dallas behavior
+and arguments. For non-Dallas cities, `view` controls whether results are:
+full city schema (`"city_full"`), standardized comparison schema
+(`"comparable"`), or both (`"both"`).
+
+Optionally converts Dallas projected coordinates to an `sf` object.
 }

@@ -2,3 +2,9 @@
 ^\.Rproj\.user$
 ^LICENSE\.md$
 ^README\.Rmd$
+^\.git$
+^\.gitignore$
+^\.\.Rcheck$
+^.*\.Rcheck$
+^.*\.tar\.gz$
+^\.DS_Store$

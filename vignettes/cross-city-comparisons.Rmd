@@ -1,0 +1,73 @@
+---
+title: "Cross-City Comparable Analysis"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Cross-City Comparable Analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+library(tidycops)
+```
+
+## Goal
+
+Use `std_*` fields for apples-to-apples incident comparisons across cities.
+
+## Inspect common field coverage
+
+```{r}
+list_common_incident_fields(min_cities = 8)
+```
+
+## Pull comparable data
+
+```{r eval = FALSE}
+sf <- get_standardized_incidents(
+  city = "san_francisco",
+  last_n_days = 14,
+  output = "comparable",
+  limit = 5000
+)
+
+chi <- get_standardized_incidents(
+  city = "chicago",
+  last_n_days = 14,
+  output = "comparable",
+  limit = 5000
+)
+```
+
+## Bind and summarize
+
+```{r eval = FALSE}
+library(dplyr)
+
+combined <- bind_rows(sf, chi)
+
+combined |>
+  count(std_city, std_offense_category, sort = TRUE)
+```
+
+## Filter tips
+
+```{r eval = FALSE}
+filtered <- get_standardized_incidents(
+  city = "cincinnati",
+  last_n_days = 30,
+  offense_category = "property crime",
+  beat = "D3B3",
+  output = "comparable",
+  limit = 5000
+)
+```
+
+## Coverage caveats
+
+Always inspect `list_incident_sources()` before comparison because some cities
+publish rolling windows or scope-limited feeds.

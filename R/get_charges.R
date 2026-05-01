@@ -93,7 +93,7 @@ get_charges <- function(start_date = NULL, end_date = NULL,
 
   # --- Base URL and Query Parameters ---
   base_url <- "https://www.dallasopendata.com/resource/9u3q-af6p.json"
-  ua <- httr::user_agent("opendpd/0.1.0 (https://github.com/Steal-This-Code/opendpd)")
+  ua <- httr::user_agent("tidycops/0.2.0 (https://github.com/Steal-This-Code/tidycops)")
   query_params <- rlang::list2(...)
 
   # --- Filtering Logic ---

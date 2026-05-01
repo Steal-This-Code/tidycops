@@ -126,7 +126,7 @@ list_distinct_values <- function(field, dataset = "incidents", year = NULL, max_
 
   # --- Base URL and Query Parameters ---
   base_url <- paste0("https://www.dallasopendata.com/resource/", resource_id, ".json")
-  ua <- httr::user_agent("opendpd/0.1.0 (https://github.com/Steal-This-Code/opendpd)")
+  ua <- httr::user_agent("tidycops/0.2.0 (https://github.com/Steal-This-Code/tidycops)")
 
   # Construct SODA query for distinct values, ordered by the field
   query_params <- list(

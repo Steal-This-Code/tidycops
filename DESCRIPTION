@@ -1,11 +1,16 @@
-Package: opendpd
+Package: tidycops
 Type: Package
-Title: An R Interface to Dallas Open Data Public Safety APIs
-Version: 0.1.0
+Title: Standardized R Access to Public Police Incident Data
+Version: 0.2.0
 Depends:
     R (>= 4.1.0)
-Authors@R: person("Anthony", "Galvan", , "anthony@stealthiscode.org", role = c("aut", "cre"))
-Description: Provides functions to download, preserve, standardize, and query Dallas Police open data from the Socrata API.
+Authors@R: person("Anthony", "Galvan", , "anthony.m.galvan@gmail.com", role = c("aut", "cre"))
+Author: Anthony Galvan [aut, cre]
+Maintainer: Anthony Galvan <anthony.m.galvan@gmail.com>
+Description: Provides a city-agnostic API wrapper to download, normalize,
+    and query public police incident datasets. Includes a standardized incident
+    schema, source crosswalks for multiple cities, and Dallas-focused legacy
+    helpers retained for compatibility.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Imports: 
@@ -14,8 +19,15 @@ Imports:
     jsonlite,
     lubridate,
     rlang,
-    stringr
-Suggests: sf
+    stringr,
+    tibble
+Suggests: 
+    knitr,
+    rmarkdown,
+    sf,
+    testthat (>= 3.0.0)
+VignetteBuilder: knitr
+Config/testthat/edition: 3
 RoxygenNote: 7.3.3
-URL: https://github.com/Steal-This-Code/opendpd
-BugReports: https://github.com/Steal-This-Code/opendpd/issues
+URL: https://github.com/Steal-This-Code/tidycops
+BugReports: https://github.com/Steal-This-Code/tidycops/issues

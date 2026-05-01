@@ -1,0 +1,63 @@
+| city | pdi_incidents | nnip_type_i_ii | platform | build_effort | portal_url | notes |
+|---|---|---|---|---|---|---|
+| Anchorage | TRUE | FALSE | Custom/Other | hard | https://www.muni.org/Departments/it/Pages/opendata.aspx |  |
+| Atlanta | TRUE | TRUE | Custom/Other | hard | http://www.atlantapd.org/i-want-to/crime-data-downloads |  |
+| Auburn | TRUE | FALSE | Custom/Other | hard | https://data.auburnwa.gov/Public-Safety/Crimes/mjmi-qtn7 |  |
+| Austin | TRUE | FALSE | Custom/Other | hard | https://data.austintexas.gov/Public-Safety/Annual-Crime-Dataset-2015/spbg-9v94 |  |
+| Baltimore | TRUE | TRUE | Custom/Other | easy | https://data.baltimorecity.gov/search?q=police%20incident |  |
+| Boston | FALSE | TRUE | ArcGIS | med | https://www.arcgis.com/home/item.html?id=d42bd4040bca419a824ae5062488aced |  |
+| Bremerton | TRUE | FALSE | Custom/Other | hard | http://www.bremertonwa.gov/991/Statistics |  |
+| Chandler | TRUE | FALSE | Custom/Other | med | https://data.chandlerpd.com/catalog/general-offenses/ |  |
+| Chapel Hill | TRUE | FALSE | ArcGIS | med | https://opendata-townofchapelhill.hub.arcgis.com/datasets/police-incident-reports-written/explore?location=35.223302%2C-79.873520%2C7.37 |  |
+| Charlotte | FALSE | TRUE | ArcGIS | med | https://data.charlottenc.gov/ |  |
+| Chicago | FALSE | TRUE | Socrata | easy | https://data.cityofchicago.org/Public-Safety/Crimes-2001-to-Present/ijzp-q8t2 |  |
+| Cincinnati | TRUE | FALSE | Socrata | easy | https://data.cincinnati-oh.gov/safety/PDI-Police-Data-Initiative-Crime-Incidents/k59e-2pvf |  |
+| Cleveland | FALSE | TRUE | ArcGIS | med | https://data.clevelandohio.gov/ |  |
+| Columbus | FALSE | TRUE | ArcGIS | hard | https://opendata.columbus.gov/ | ArcGIS portal is active, but quick discovery did not surface an obvious incident-level police feed. |
+| Dallas | TRUE | FALSE | Custom/Other | easy | https://www.dallasopendata.com/Archive/Dallas-Police-Public-Data-RMS-Incidents-with-GeoLo/4ea4-q4ui |  |
+| Denver | TRUE | FALSE | ArcGIS | easy | https://opendata-geospatialdenver.hub.arcgis.com/ | Incident adapter wired to `ODC_CRIME_OFFENSES_P` (rolling 5 years + current year). |
+| Detroit | FALSE | TRUE | ArcGIS | easy | https://data.detroitmi.gov/datasets/detroitmi::rms-crime-incidents/about | Incident adapter wired to RMS Crime Incidents (row grain is incident-offense). |
+| Fayetteville | TRUE | FALSE | Custom/Other | med | https://data.fayettevillenc.gov/datasets?q=police&sort_by=relevance |  |
+| Ferndale | TRUE | FALSE | Custom/Other | med | https://data.ferndalemi.gov/pages/crime-mappingcom |  |
+| Flint | TRUE | FALSE | Custom/Other | hard | https://www.mcc.edu/public_safety/ps_dailycrimelogs.shtml |  |
+| Fort Lauderdale | TRUE | FALSE | Socrata | easy | https://fortlauderdale.data.socrata.com/stories/s/Fort-Lauderdale-Neighborhood-Associations/fbjy-q52c |  |
+| Gainesville | TRUE | FALSE | Socrata | easy | https://data.cityofgainesville.org/Public-Safety/Crime-Responses/gvua-xt9q |  |
+| Gaithersburg | TRUE | FALSE | Custom/Other | med | https://data.montgomerycountymd.gov/Public-Safety/Crime/icn6-v9z3 |  |
+| Grand Rapids | FALSE | TRUE | ArcGIS | easy | https://grpd-grandrapids.hub.arcgis.com/search?groupIds=7d1304bc6c43412c87f178874d9d2fb7 | Incident adapter wired to ArcGIS `incident_reports` layer (item `a7dc3002434d4ab6869feb02ec9f7a30`). |
+| Hampton | TRUE | FALSE | Custom/Other | hard | https://www.hampton.gov/DocumentCenter/View/31004/5-Year-Comparison-?bidId= |  |
+| Hartford | TRUE | TRUE | Socrata | easy | https://data.hartford.gov/Public-Safety/Police-Incidents-01012005-to-Current/889t-nwfu |  |
+| Houston | FALSE | TRUE | ArcGIS | easy | https://mycity2.houstontx.gov/pubgis02/rest/services/HPD/NIBRS_Recent_Crime_Reports/FeatureServer | Incident adapter wired to HPD NIBRS Recent Crime Reports layers 0-3 (Group A+B). Point-geometry feed with street/block + beat/district fields; no non-point geometry layers. |
+| Indianapolis | FALSE | TRUE | ArcGIS | easy | https://data.indy.gov/ | Incident adapter wired to IMPD `Incidents_Public` layer. |
+| Kansas City | FALSE | TRUE | Socrata | easy | https://data.kcmo.org/ |  |
+| Lincoln | TRUE | FALSE | ArcGIS | med | https://opendata.lincoln.ne.gov/datasets?q=Incident+Reports |  |
+| Los Angeles | TRUE | TRUE | Custom/Other | hard | https://data.lacity.org/Public-Safety/Traffic-Collision-Data-from-2010-to-Present/d5tf-ez2w | PDI incidents link resolves to a traffic-collision dataset; incident endpoint likely needs remapping. |
+| Louisville | TRUE | FALSE | CKAN | easy | https://data.louisvilleky.gov/dataset/crime-data |  |
+| Memphis | FALSE | TRUE | ArcGIS | med | https://data.memphistn.gov/ |  |
+| Mesa | TRUE | FALSE | Socrata | easy | https://data.mesaaz.gov/Police/Crime-Reporting-Statistics/37q9-d27y | PDI contains mixed links (one live, multiple legacy 404s). |
+| Miami | FALSE | TRUE | ArcGIS | med | https://www.miami.gov/Maps-Data/Data-Explorer | City Data Explorer is available; specific incident dataset may require additional discovery. |
+| Milwaukee | FALSE | TRUE | CKAN | med | https://data.milwaukee.gov/ |  |
+| Minneapolis | FALSE | TRUE | ArcGIS | easy | https://opendata.minneapolismn.gov/ | Incident adapter wired to `Police_Incidents_Last_2Years` (rolling two-year feed). |
+| Naperville | TRUE | FALSE | Socrata | easy | https://data.naperville.il.us/Public-Safety/Police-Department-Incidents/7g4n-9xjz/data |  |
+| New Haven | FALSE | TRUE | Custom/Other | hard | https://www.newhavenct.gov/government/departments-divisions/new-haven-police-department/compstat-reports | CompStat/report pages found; direct open incident API not obvious. |
+| New Orleans | FALSE | TRUE | Socrata | easy | https://data.nola.gov/ |  |
+| New York | TRUE | TRUE | Socrata | easy | https://data.cityofnewyork.us/browse?q=incidents&sortBy=relevance&tags=nypd&page=1 |  |
+| Newport News | TRUE | FALSE | Custom/Other | med | https://www.nnva.gov/2229/Open-Data |  |
+| Orlando | TRUE | FALSE | Socrata | hard | https://orlandofl-transparency.connect.socrata.com/ |  |
+| Palo Alto | TRUE | FALSE | Custom/Other | hard | https://data.cityofpaloalto.org/dataviews/95541/crime-reports/ |  |
+| Philadelphia | TRUE | TRUE | CKAN | med | https://opendataphilly.org/dataset/crime-incidents |  |
+| Phoenix | TRUE | FALSE | CKAN | med | https://www.phoenixopendata.com/dataset/crime-data |  |
+| Pinellas | FALSE | TRUE | ArcGIS | hard | https://pinellas-egis.opendata.arcgis.com/ | County ArcGIS hub exists, but police incident feed may vary by agency/jurisdiction. |
+| Pittsburgh | FALSE | TRUE | CKAN | easy | https://data.wprdc.org/dataset/monthly-criminal-activity-dashboard | Adapter uses current Monthly Criminal Activity datastore resource on WPRDC. |
+| Portland | TRUE | FALSE | Custom/Other | med | https://www.portland.gov/police/open-data/reported-crime-data |  |
+| Providence | TRUE | FALSE | Socrata | easy | https://data.providenceri.gov/Public-Safety/Providence-Police-Case-Log-Past-180-days/rz3y-pz8v |  |
+| Rochester | TRUE | FALSE | ArcGIS | med | https://data-rpdny.opendata.arcgis.com/datasets/rpd-part-i-crime-2011-to-present |  |
+| Sacramento | TRUE | FALSE | Custom/Other | med | https://data.cityofsacramento.org/datasets?q=crime+data |  |
+| Salt Lake City | TRUE | FALSE | Custom/Other | hard | https://www.slcpd.com/open-data/crimestatistics/ |  |
+| San Antonio | FALSE | TRUE | CKAN | easy | https://data.sanantonio.gov/ | Adapter uses `SAPD Offenses` CKAN datastore resource. |
+| San Francisco | TRUE | FALSE | Socrata | easy | https://data.sfgov.org/Public-Safety/Police-Department-Incident-Reports-2018-to-Present/wg3w-h783 |  |
+| Seattle | FALSE | TRUE | Socrata | easy | https://data.seattle.gov/ |  |
+| South Bend | TRUE | FALSE | ArcGIS | med | https://data-southbend.opendata.arcgis.com/datasets/criminally-assaulted-shootings |  |
+| St. Louis | TRUE | TRUE | Custom/Other | hard | https://slmpd.org/stats/ |  |
+| Tacoma | TRUE | FALSE | Unknown | hard |  | PDI short link failed to resolve during check; needs manual endpoint discovery. |
+| Tucson | TRUE | FALSE | Custom/Other | med | https://gisdata.tucsonaz.gov/datasets?q=Incidents&t=incidents |  |
+| Washington, DC | FALSE | TRUE | ArcGIS | med | https://www.arcgis.com/home/item.html?id=c92a2cee0111473985c389e7a0805ea5 |  |
