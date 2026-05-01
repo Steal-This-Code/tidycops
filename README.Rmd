@@ -83,8 +83,8 @@ list_common_incident_fields(min_cities = 4)
 Use this when you want harmonized fields for city-to-city analysis.
 
 ```{r}
-sf_compare <- get_incidents(
-  city = "san_francisco",
+chicago_compare <- get_incidents(
+  city = "chicago",
   view = "comparable",
   start_date = "2026-04-01",
   end_date = "2026-04-07",
