@@ -76,7 +76,6 @@ chicago_compare <- get_incidents(
   view = "comparable",
   start_date = "2026-04-01",
   end_date = "2026-04-07",
-  neighborhood = "Mission",
   as_sf = TRUE,
   limit = 500
 )
