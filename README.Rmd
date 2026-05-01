@@ -76,6 +76,10 @@ list_supported_incident_cities()
 
 # Which fields are most comparable across cities?
 list_common_incident_fields(min_cities = 4)
+
+# What fields (standardized and source) are available for a specific city?
+list_incident_fields("chicago")
+list_incident_fields("san_francisco")
 ```
 
 ### 1) Comparable Cross-City Output
