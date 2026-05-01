@@ -220,3 +220,99 @@ list_distinct_values <- function(field, dataset = "incidents", year = NULL, max_
 
   return(values_vector)
 }
+
+#' List Available Incident Fields for a City
+#'
+#' Returns the available fields (columns) for a specified city's incident dataset,
+#' including both standardized field names and their source field mappings.
+#'
+#' @description
+#' This function helps users discover what fields are available in a city's
+#' incident data. It shows the standardized field names (prefixed with `std_`)
+#' and the corresponding source field names from the city's native dataset.
+#'
+#' @param city Character string specifying the city. Defaults to `"dallas"`.
+#'   See [list_supported_incident_cities()] for the full list of supported cities.
+#'
+#' @return A tibble with columns:
+#'   - `std_field`: Standardized field name (prefixed with `std_`)
+#'   - `source_fields`: Comma-separated list of possible source field names
+#'     that map to this standardized field
+#'
+#' @export
+#'
+#' @importFrom dplyr tibble
+#'
+#' @examples
+#' \dontrun{
+#'   # List available fields for Chicago
+#'   chi_fields <- list_incident_fields("chicago")
+#'   print(chi_fields)
+#'
+#'   # List available fields for San Francisco
+#'   sf_fields <- list_incident_fields("san_francisco")
+#'   print(sf_fields)
+#' }
+list_incident_fields <- function(city = "dallas") {
+  # Validate city input
+  if (!is.character(city) || length(city) != 1 || is.na(city) || !nzchar(trimws(city))) {
+    stop("`city` must be a single non-empty string.", call. = FALSE)
+  }
+
+  # Normalize city key
+  city <- normalize_incident_city_key(city)
+
+  # Get the city specification
+  tryCatch({
+    city_spec <- get_incident_city_spec(city)
+  }, error = function(e) {
+    rlang::abort(paste0("Could not retrieve specifications for city: ", city,
+                        ". Call list_supported_incident_cities() for available options."))
+  })
+
+  # Get the primary source (usually the first one)
+  if (!is.null(city_spec$sources) && length(city_spec$sources) > 0) {
+    source_spec <- city_spec$sources[[1]]
+  } else {
+    rlang::abort(paste("No sources found for city:", city))
+  }
+
+  # Extract field map
+  field_map <- source_spec$field_map
+  if (is.null(field_map)) {
+    rlang::abort(paste("No field map found for city:", city))
+  }
+
+  # Convert field map to tibble
+  fields_list <- mapply(
+    function(std_name, source_names) {
+      # Handle both single values and vectors
+      if (is.null(source_names)) {
+        source_str <- "N/A"
+      } else if (is.character(source_names)) {
+        source_str <- paste(source_names, collapse = ", ")
+      } else {
+        source_str <- as.character(source_names)
+      }
+
+      list(
+        std_field = std_name,
+        source_fields = source_str
+      )
+    },
+    names(field_map),
+    field_map,
+    SIMPLIFY = FALSE
+  )
+
+  # Convert list to tibble
+  result <- dplyr::tibble(
+    std_field = sapply(fields_list, `[[`, 1),
+    source_fields = sapply(fields_list, `[[`, 2)
+  )
+
+  # Sort by std_field name for easier reading
+  result <- result[order(result$std_field), ]
+
+  return(result)
+}
