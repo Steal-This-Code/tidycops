@@ -187,8 +187,8 @@ fetch_socrata_dataset <- function(base_url, limit = Inf, select = NULL, where = 
     query_params[["$offset"]] <- current_offset
     request_url <- httr::modify_url(base_url, query = query_params)
 
-    response <- httr::GET(request_url, dpd_user_agent())
-    httr::stop_for_status(response, task = paste("fetch data. URL:", request_url))
+    # Fetch with retry logic and rate limiting
+    response <- .fetch_with_retry(request_url)
 
     if (httr::http_type(response) != "application/json") {
       stop("API did not return JSON.", call. = FALSE)
@@ -235,6 +235,9 @@ fetch_socrata_dataset <- function(base_url, limit = Inf, select = NULL, where = 
     } else {
       min(limit - records_retrieved, api_max_limit_per_req)
     }
+
+    # Rate limiting: pause between requests to respect API limits
+    Sys.sleep(0.5)
   }
 
   rlang::inform(paste("Total records retrieved:", records_retrieved))
@@ -252,6 +255,105 @@ fetch_socrata_dataset <- function(base_url, limit = Inf, select = NULL, where = 
 
   rlang::inform("Data retrieval complete.")
   final_data
+}
+
+.fetch_with_retry <- function(url,
+                              max_retries = 3,
+                              initial_delay = 1,
+                              backoff_factor = 2,
+                              timeout_seconds = 30) {
+  for (attempt in seq_len(max_retries)) {
+    tryCatch({
+      response <- httr::GET(
+        url,
+        dpd_user_agent(),
+        httr::timeout(timeout_seconds)
+      )
+
+      # Check for client errors (4xx) - don't retry
+      if (response$status_code >= 400 && response$status_code < 500) {
+        # Provide helpful error messages for common 4xx errors
+        if (response$status_code == 400) {
+          stop(
+            paste(
+              "HTTP 400 Bad Request - Check URL formatting and query parameters.",
+              "URL:", url
+            ),
+            call. = FALSE
+          )
+        } else if (response$status_code == 401) {
+          stop("HTTP 401 Unauthorized - API authentication required.", call. = FALSE)
+        } else if (response$status_code == 403) {
+          stop("HTTP 403 Forbidden - Access denied to this endpoint.", call. = FALSE)
+        } else if (response$status_code == 404) {
+          stop(
+            paste("HTTP 404 Not Found - Endpoint does not exist.", "URL:", url),
+            call. = FALSE
+          )
+        } else {
+          httr::stop_for_status(
+            response,
+            task = paste("fetch data. URL:", url)
+          )
+        }
+      }
+
+      # Check for server errors (5xx) and rate limiting (429) - retry with backoff
+      if (response$status_code %in% c(429, 500, 502, 503, 504)) {
+        if (attempt < max_retries) {
+          delay <- initial_delay * (backoff_factor ^ (attempt - 1))
+          rlang::warn(
+            paste(
+              "HTTP", response$status_code, "error. Retrying in", delay,
+              "seconds (attempt", attempt, "of", max_retries, ")..."
+            )
+          )
+          Sys.sleep(delay)
+          next
+        } else {
+          stop(
+            paste(
+              "HTTP", response$status_code, "error after", max_retries,
+              "retries. The API may be temporarily unavailable. URL:", url
+            ),
+            call. = FALSE
+          )
+        }
+      }
+
+      # Success (2xx)
+      return(response)
+    }, error = function(e) {
+      # Handle timeout and network errors
+      if (attempt < max_retries &&
+          (grepl("timeout|Timeout|TIMEOUT", e$message) ||
+           grepl("connection|Connection|CONNECTION", e$message) ||
+           grepl("resolve|Resolve|RESOLVE", e$message))) {
+        delay <- initial_delay * (backoff_factor ^ (attempt - 1))
+        rlang::warn(
+          paste(
+            "Network error:", e$message, "Retrying in", delay,
+            "seconds (attempt", attempt, "of", max_retries, ")..."
+          )
+        )
+        Sys.sleep(delay)
+      } else if (attempt == max_retries) {
+        stop(
+          paste(
+            "Failed after", max_retries, "attempts.",
+            "Error:", e$message
+          ),
+          call. = FALSE
+        )
+      } else {
+        # Re-raise to try next attempt
+        delay <- initial_delay * (backoff_factor ^ (attempt - 1))
+        Sys.sleep(delay)
+      }
+    })
+  }
+
+  stop("Unexpected error in retry logic.", call. = FALSE)
 }
 
 build_arcgis_date_range_clauses <- function(date_field,
