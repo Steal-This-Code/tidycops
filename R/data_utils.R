@@ -183,8 +183,8 @@ fetch_socrata_dataset <- function(base_url, limit = Inf, select = NULL, where = 
       break
     }
 
-    query_params[["$limit"]] <- fetch_limit_this_req
-    query_params[["$offset"]] <- current_offset
+    query_params[["$limit"]] <- as.integer(fetch_limit_this_req)
+    query_params[["$offset"]] <- as.integer(current_offset)
     request_url <- httr::modify_url(base_url, query = query_params)
 
     # Fetch with retry logic and rate limiting
@@ -514,8 +514,8 @@ fetch_arcgis_dataset <- function(base_url,
       break
     }
 
-    query_params[["resultOffset"]] <- current_offset
-    query_params[["resultRecordCount"]] <- fetch_limit_this_req
+    query_params[["resultOffset"]] <- as.integer(current_offset)
+    query_params[["resultRecordCount"]] <- as.integer(fetch_limit_this_req)
     request_url <- httr::modify_url(paste0(base_url, "/query"), query = query_params)
 
     response <- httr::GET(request_url, dpd_user_agent())
@@ -665,8 +665,8 @@ fetch_ckan_dataset <- function(base_url,
       " FROM ", sql_from,
       " WHERE ", sql_where,
       sql_order,
-      " LIMIT ", fetch_limit_this_req,
-      " OFFSET ", current_offset
+      " LIMIT ", as.integer(fetch_limit_this_req),
+      " OFFSET ", as.integer(current_offset)
     )
 
     query_params <- c(list(sql = sql), query_params_extra)

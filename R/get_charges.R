@@ -213,8 +213,8 @@ get_charges <- function(start_date = NULL, end_date = NULL,
   repeat {
     if (fetch_limit_this_req <= 0) break
 
-    query_params[["$limit"]] <- fetch_limit_this_req
-    query_params[["$offset"]] <- current_offset
+    query_params[["$limit"]] <- as.integer(fetch_limit_this_req)
+    query_params[["$offset"]] <- as.integer(current_offset)
     request_url <- httr::modify_url(base_url, query = query_params)
 
     response <- httr::GET(request_url, ua)
