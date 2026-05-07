@@ -1,9 +1,16 @@
+##### Data Utilities #####
 # R/data_utils.R
+# Internal utilities for Dallas Police Department data access and validation
+# Includes dataset specifications, date window resolution, and API helpers
 
+##### User Agent #####
+# Create HTTP user agent string for API requests
 dpd_user_agent <- function() {
   httr::user_agent("tidycops/0.2.0 (https://github.com/Steal-This-Code/tidycops)")
 }
 
+##### Dataset Specifications #####
+# Define base URL and metadata for different DPD datasets
 get_dpd_dataset_spec <- function(dataset) {
   dataset <- match.arg(dataset, c("incidents", "arrests"))
 
@@ -22,12 +29,20 @@ get_dpd_dataset_spec <- function(dataset) {
   )
 }
 
+##### Validation Helpers #####
+# Validate user inputs for API calls and data processing
+
+# Check that limit parameter is valid numeric value
 validate_limit <- function(limit) {
   if (!is.numeric(limit) || length(limit) != 1 || is.na(limit) || limit <= 0) {
     stop("`limit` must be a positive number or Inf.", call. = FALSE)
   }
 }
 
+##### Date Window Resolution #####
+# Convert various date input formats to standardized start/end date pairs
+
+# Resolve date window from user inputs (last_n_days or explicit dates)
 resolve_incident_date_window <- function(start_date = NULL,
                                          end_date = NULL,
                                          last_n_days = NULL) {
@@ -64,6 +79,10 @@ resolve_incident_date_window <- function(start_date = NULL,
   )
 }
 
+##### Query Building Utilities #####
+# Construct SQL WHERE clauses and filter expressions for Socrata API
+
+# Build SQL IN clause for filtering on multiple values
 sql_in_clause <- function(field, values) {
   if (is.null(values) || length(values) == 0) {
     return(NULL)
@@ -84,6 +103,7 @@ sql_in_clause <- function(field, values) {
   paste0(field, " IN (", paste(quoted_values, collapse = ", "), ")")
 }
 
+# Combine multiple WHERE clause conditions with AND logic
 compose_where_clause <- function(clauses) {
   clauses <- clauses[!vapply(clauses, is.null, logical(1))]
   clauses <- unlist(clauses, use.names = FALSE)
@@ -95,6 +115,7 @@ compose_where_clause <- function(clauses) {
   paste(clauses, collapse = " AND ")
 }
 
+# Build date range conditions for WHERE clause
 build_date_range_clauses <- function(date_field, start_date = NULL, end_date = NULL) {
   clauses <- character()
 
@@ -119,6 +140,10 @@ build_date_range_clauses <- function(date_field, start_date = NULL, end_date = N
   clauses
 }
 
+##### Column and Data Retrieval #####
+# Ensure required columns are included and fetch data from Socrata API
+
+# Add required columns to select statement if missing
 ensure_selected_columns <- function(select, required_columns, context = "processing") {
   if (is.null(select)) {
     return(select)

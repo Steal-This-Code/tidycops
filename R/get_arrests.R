@@ -1,4 +1,6 @@
+##### Arrest Data Retrieval #####
 # R/get_arrests.R
+# Fetch arrest records from Dallas Police Department open data portal
 
 #' Fetch Dallas Police Arrest Data
 #'

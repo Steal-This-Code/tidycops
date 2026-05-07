@@ -1,4 +1,6 @@
+##### Field Value Listing #####
 # R/list_values.R
+# Query and display distinct field values from various police datasets
 
 #' List Distinct Values for a Field from a Specific Dataset
 #'

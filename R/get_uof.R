@@ -1,4 +1,6 @@
+##### Use of Force Data Retrieval #####
 # R/get_uof.R
+# Fetch use of force and response to resistance data (2017-2020)
 
 #' Fetch Dallas Police Use of Force / Response to Resistance Data (2017-2020)
 #'

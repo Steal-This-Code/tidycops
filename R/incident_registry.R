@@ -1,4 +1,10 @@
+##### Incident Registry and City Configuration #####
 # R/incident_registry.R
+# Internal registry mapping city names to data source configurations
+# Handles city key normalization and source specification lookup
+
+##### City Key Normalization #####
+# Normalize and validate city identifiers
 
 normalize_incident_city_key <- function(city) {
   if (!is.character(city) || length(city) != 1 || is.na(city) || !nzchar(trimws(city))) {
@@ -89,6 +95,9 @@ normalize_incident_city_key <- function(city) {
 
   resolved
 }
+
+##### City Source Specifications #####
+# Define data sources and field mappings for each supported city
 
 get_incident_city_spec <- function(city) {
   city <- normalize_incident_city_key(city)

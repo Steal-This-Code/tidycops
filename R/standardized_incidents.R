@@ -1,5 +1,9 @@
+##### Standardized Incident Schema #####
 # R/standardized_incidents.R
+# Define and manage standardized incident schema for cross-city comparisons
 
+##### Standard Columns #####
+# Define list of standardized columns for incident data
 standard_incident_columns <- function() {
   c(
     "std_city",
@@ -28,6 +32,8 @@ standard_incident_columns <- function() {
   )
 }
 
+##### Field Definitions #####
+# Describe each standard incident field with metadata
 standard_incident_field_definitions <- function() {
   dplyr::tibble(
     field = standard_incident_columns(),

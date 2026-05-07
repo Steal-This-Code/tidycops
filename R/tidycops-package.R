@@ -1,3 +1,7 @@
+##### tidycops Package #####
+# R/tidycops-package.R
+# Main package documentation and exports
+
 #' tidycops: Standardized Police Incident Data Access
 #'
 #' `tidycops` provides a consistent R interface for incident-level police open

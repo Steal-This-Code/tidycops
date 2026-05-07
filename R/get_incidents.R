@@ -1,4 +1,7 @@
+##### Incident Data Retrieval #####
 # R/get_incidents.R
+# Main interface for fetching incident data from multiple city sources
+# Supports both Dallas legacy interface and standardized multi-city adapter
 
 #' Fetch Incident Data
 #'

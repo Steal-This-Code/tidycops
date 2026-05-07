@@ -1,4 +1,6 @@
+##### Officer Involved Shooting Data Retrieval #####
 # R/get_ois.R
+# Fetch officer involved shooting incidents and case details
 
 #' Fetch Dallas Police Officer Involved Shooting (OIS) Data
 #'

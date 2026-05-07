@@ -1,4 +1,7 @@
+##### Data Cleaning Functions #####
 # R/clean_data.R
+# Utilities for cleaning and normalizing incident and arrest data
+# Handles text standardization, date parsing, and helper field generation
 
 #' Clean Dallas Police Incidents Data
 #'
@@ -31,6 +34,9 @@
 #'
 #' @return A tibble with the requested cleaning and parsing applied.
 #' @export
+
+##### Main Cleaning Function #####
+# Apply cleaning transformations to incident data while preserving raw values
 clean_incidents_data <- function(data,
                                  text_fields = c(
                                    "division", "district", "premise", "offincident",
@@ -150,6 +156,9 @@ clean_incidents_data <- function(data,
   cleaned_data
 }
 
+
+##### Division Standardization #####
+# Normalize division names to standard set and convert to factor
 
 #' Standardize Police Division Names
 #'

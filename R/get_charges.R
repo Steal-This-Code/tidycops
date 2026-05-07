@@ -1,4 +1,6 @@
+##### Arrest Charge Data Retrieval #####
 # R/get_charges.R
+# Fetch detailed charge information from Dallas Police Department arrest records
 
 #' Fetch Dallas Police Arrest Charge Data
 #'
