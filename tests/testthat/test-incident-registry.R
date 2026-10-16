@@ -60,6 +60,21 @@ test_that("supported city list has expected columns", {
   expect_true("new_york" %in% x$city)
 })
 
+test_that("source coverage checker reports bounded windows", {
+  check <- tidycops:::check_incident_source_coverage(
+    city = "san_antonio",
+    start_date = as.Date("2022-01-01"),
+    end_date = as.Date("2025-12-31")
+  )
+
+  expect_s3_class(check, "tbl_df")
+  expect_true("coverage_status" %in% names(check))
+  expect_identical(check$source_id[[1]], "san_antonio_sapd_offenses")
+  expect_identical(check$coverage_status[[1]], "partial")
+  expect_identical(check$coverage_start[[1]], as.Date("2023-01-01"))
+  expect_identical(check$coverage_end[[1]], as.Date("2025-12-31"))
+})
+
 test_that("incident source registry returns source coverage metadata", {
   x <- list_incident_sources("cincinnati")
   expect_s3_class(x, "tbl_df")

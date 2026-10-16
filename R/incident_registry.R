@@ -1350,6 +1350,105 @@ list_supported_incident_cities <- function() {
   dplyr::bind_rows(rows)
 }
 
+#' Check Incident Source Coverage Against a Requested Window
+#'
+#' Evaluates whether a requested date window is fully covered by each configured
+#' source for a city, and reports the effective coverage boundary for each source.
+#'
+#' @param city City key.
+#' @param start_date Optional start date in `YYYY-MM-DD` format or as a `Date`.
+#' @param end_date Optional end date in `YYYY-MM-DD` format or as a `Date`.
+#' @param last_n_days Optional positive integer shortcut to set the date window.
+#'
+#' @return A tibble with the source metadata plus the effective coverage window
+#'   and coverage status for the requested range.
+#' @export
+check_incident_source_coverage <- function(city,
+                                           start_date = NULL,
+                                           end_date = NULL,
+                                           last_n_days = NULL) {
+  city_key <- normalize_incident_city_key(city)
+  city_spec <- get_incident_city_spec(city_key)
+  date_window <- resolve_incident_date_window(
+    start_date = start_date,
+    end_date = end_date,
+    last_n_days = last_n_days
+  )
+
+  requested_start <- date_window$start_date
+  requested_end <- date_window$end_date
+
+  rows <- lapply(city_spec$sources, function(source) {
+    source_start <- source$active_from
+    source_end <- source$active_to
+
+    if (is.null(requested_start) && is.null(requested_end)) {
+      coverage_start <- source_start
+      coverage_end <- source_end
+      coverage_status <- if (is.null(source_end) && is.null(source_start)) {
+        "unbounded"
+      } else {
+        "source_window"
+      }
+      covered <- TRUE
+      coverage_note <- if (is.null(source_start) && is.null(source_end)) {
+        "No date restriction recorded for this source."
+      } else if (is.null(source_end)) {
+        paste0("Source is active from ", source_start, ".")
+      } else if (is.null(source_start)) {
+        paste0("Source is active through ", source_end, ".")
+      } else {
+        paste0("Source window: ", source_start, " to ", source_end, ".")
+      }
+    } else {
+      effective_start <- if (is.null(source_start)) requested_start else max(requested_start, source_start)
+      effective_end <- if (is.null(source_end)) requested_end else min(requested_end, source_end)
+
+      if (is.null(effective_start) || is.null(effective_end)) {
+        coverage_status <- "partial"
+        covered <- FALSE
+        coverage_note <- "Request is partially bounded by source coverage."
+      } else if (effective_start > effective_end) {
+        coverage_status <- "none"
+        covered <- FALSE
+        coverage_note <- "Requested date range falls completely outside the source coverage window."
+      } else if (
+        (is.null(source_start) || requested_start >= source_start) &&
+        (is.null(source_end) || requested_end <= source_end)
+      ) {
+        coverage_status <- "full"
+        covered <- TRUE
+        coverage_note <- "Requested window is fully covered by the source."
+      } else {
+        coverage_status <- "partial"
+        covered <- FALSE
+        coverage_note <- "Requested window overlaps only part of the source coverage window."
+      }
+
+      coverage_start <- effective_start
+      coverage_end <- effective_end
+    }
+
+    dplyr::tibble(
+      city = city_spec$city,
+      display_name = city_spec$display_name,
+      source_id = source$source_id,
+      source_name = source$display_name,
+      active_from = source$active_from %||% as.Date(NA),
+      active_to = source$active_to %||% as.Date(NA),
+      requested_start = requested_start %||% as.Date(NA),
+      requested_end = requested_end %||% as.Date(NA),
+      coverage_start = coverage_start %||% as.Date(NA),
+      coverage_end = coverage_end %||% as.Date(NA),
+      coverage_status = coverage_status,
+      full_coverage = covered,
+      coverage_note = coverage_note
+    )
+  })
+
+  dplyr::bind_rows(rows)
+}
+
 #' List Incident Source Registry
 #'
 #' Lists the configured incident source adapters and date coverage windows.

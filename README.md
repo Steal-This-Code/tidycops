@@ -178,6 +178,16 @@ list_incident_sources(city = "san_antonio") |>
   dplyr::select(source_id, active_from, active_to, source_status, source_note)
 ```
 
+Or evaluate the effective overlap for a requested date range directly:
+
+``` r
+check_incident_source_coverage(
+  city = "san_antonio",
+  start_date = "2022-01-01",
+  end_date = "2025-12-31"
+)
+```
+
 ## Build Priorities: Incident Function Shortcuts
 
 Before expanding to arrests/UOF, these are the highest-value additions
