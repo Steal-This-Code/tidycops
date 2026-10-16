@@ -75,6 +75,37 @@ test_that("source coverage checker reports bounded windows", {
   expect_identical(check$coverage_end[[1]], as.Date("2025-12-31"))
 })
 
+test_that("bounded feeds have visible coverage metadata and warn on out-of-window requests", {
+  city_specs <- lapply(list_supported_incident_cities()$city, get_incident_city_spec)
+  bounded <- dplyr::bind_rows(lapply(city_specs, function(city_spec) {
+    dplyr::bind_rows(lapply(city_spec$sources, function(source) {
+      status <- source$source_status %||%
+        if (is.null(source$active_to)) "current" else "historical_window"
+      if (status %in% c("rolling_window", "historical_capped")) {
+        dplyr::tibble(
+          city = city_spec$city,
+          source_id = source$source_id,
+          has_source_note = !is.na(source$source_note) && nzchar(source$source_note),
+          has_active_from = !is.na(source$active_from),
+          has_active_to = !is.na(source$active_to)
+        )
+      }
+    }))
+  }))
+
+  expect_true(nrow(bounded) > 0)
+  expect_true(all(bounded$has_source_note | bounded$has_active_from | bounded$has_active_to))
+
+  expect_warning(
+    tidycops:::warn_limited_source_coverage(
+      get_incident_city_spec("san_antonio"),
+      start_date = as.Date("2022-01-01"),
+      end_date = as.Date("2022-01-31")
+    ),
+    "Coverage note for San Antonio"
+  )
+})
+
 test_that("incident source registry returns source coverage metadata", {
   x <- list_incident_sources("cincinnati")
   expect_s3_class(x, "tbl_df")
