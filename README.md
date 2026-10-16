@@ -135,6 +135,31 @@ recent_cincy <- get_incidents(
 )
 ```
 
+### Controlling Row Limits
+
+By default, `get_incidents()` and similar functions return up to **1,000 rows**.
+Use the `limit` parameter to change this:
+
+``` r
+# Fetch 5,000 records
+chicago_5k <- get_incidents(
+  city = "chicago",
+  last_n_days = 30,
+  limit = 5000
+)
+
+# Fetch ALL available records (may be slow)
+chicago_all <- get_incidents(
+  city = "chicago",
+  last_n_days = 30,
+  limit = Inf
+)
+```
+
+Setting `limit = Inf` makes the function page through the entire API result set
+and return all matching records. This is useful for exhaustive analysis but can
+be slow for large date ranges or unfiltered queries.
+
 ## Source Freshness and Bounded Feeds
 
 Some adapters are rolling windows, capped historical feeds, or
@@ -144,6 +169,13 @@ source metadata before analysis.
 ``` r
 list_incident_sources() |>
   dplyr::filter(source_status %in% c("historical_capped", "rolling_window") | scope_status != "all_incidents")
+```
+
+Check the explicit coverage window for a city before analysis:
+
+``` r
+list_incident_sources(city = "san_antonio") |>
+  dplyr::select(source_id, active_from, active_to, source_status, source_note)
 ```
 
 ## Build Priorities: Incident Function Shortcuts

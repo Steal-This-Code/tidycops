@@ -1207,8 +1207,9 @@ get_incident_city_spec <- function(city) {
           date_field = "Report_Date",
           ckan_date_field_type = "text",
           order_by = "\"Report_Date\" DESC",
-          active_from = NULL,
+          active_from = as.Date("2023-01-01"),
           active_to = NULL,
+          source_note = "Observed earliest Report_Date in the dataset is 2023-01-01; newer rows continue to be added as the feed updates.",
           field_map = list(
             std_source_record_id = c("Report_ID", "_id"),
             std_incident_id = "Report_ID",
