@@ -171,6 +171,13 @@ list_incident_sources() |>
   dplyr::filter(source_status %in% c("historical_capped", "rolling_window") | scope_status != "all_incidents")
 ```
 
+Check the explicit coverage window for a city before analysis:
+
+``` r
+list_incident_sources(city = "san_antonio") |>
+  dplyr::select(source_id, active_from, active_to, source_status, source_note)
+```
+
 ## Build Priorities: Incident Function Shortcuts
 
 Before expanding to arrests/UOF, these are the highest-value additions

@@ -179,6 +179,7 @@ test_that("incident source registry returns source coverage metadata", {
   expect_equal(nrow(san_antonio), 1)
   expect_identical(san_antonio$provider[[1]], "ckan")
   expect_identical(san_antonio$dataset_id[[1]], "f36bb931-8fb4-481c-83d9-a3589108bb20")
+  expect_identical(san_antonio$active_from[[1]], as.Date("2023-01-01"))
 
   nyc <- list_incident_sources("new_york")
   expect_equal(nrow(nyc), 2)
