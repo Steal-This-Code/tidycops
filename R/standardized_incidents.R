@@ -333,20 +333,57 @@ build_limited_source_messages <- function(city_spec, start_date = NULL, end_date
 }
 
 warn_limited_source_coverage <- function(city_spec, start_date = NULL, end_date = NULL) {
-  limited <- build_limited_source_messages(
-    city_spec = city_spec,
-    start_date = start_date,
-    end_date = end_date
-  )
+  warnings <- character()
 
-  if (length(limited) == 0) {
+  for (source in city_spec$sources) {
+    window <- intersect_source_window(
+      start_date = start_date,
+      end_date = end_date,
+      active_from = source$active_from,
+      active_to = source$active_to
+    )
+
+    source_status <- source$source_status %||%
+      if (is.null(source$active_to)) "current" else "historical_window"
+    scope_status <- source$scope_status %||% "all_incidents"
+
+    has_source_limit <- source_status %in% c("historical_capped", "rolling_window")
+    has_scope_limit <- !identical(scope_status, "all_incidents")
+
+    if (is.null(window)) {
+      if (!is.null(start_date) || !is.null(end_date)) {
+        source_window_note <- paste0(
+          source$source_id,
+          " (requested window falls outside active source coverage",
+          if (!is.null(source$active_from)) paste0("; active_from=", source$active_from) else "",
+          if (!is.null(source$active_to)) paste0("; active_to=", source$active_to) else "",
+          ")"
+        )
+        warnings <- c(warnings, source_window_note)
+      }
+      next
+    }
+
+    if (has_source_limit || has_scope_limit) {
+      details <- c()
+      if (has_source_limit) {
+        details <- c(details, paste0("source_status=", source_status))
+      }
+      if (has_scope_limit) {
+        details <- c(details, paste0("scope_status=", scope_status))
+      }
+      warnings <- c(warnings, paste0(source$source_id, " (", paste(details, collapse = ", "), ")"))
+    }
+  }
+
+  if (length(warnings) == 0) {
     return(invisible(FALSE))
   }
 
   rlang::warn(
     paste0(
       "Coverage note for ", city_spec$display_name, ": ",
-      paste(limited, collapse = "; "),
+      paste(warnings, collapse = "; "),
       ". Use list_incident_sources(city = '", city_spec$city, "') for details."
     )
   )
